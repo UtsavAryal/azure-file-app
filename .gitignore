@@ -1,0 +1,10 @@
+# Ignore backend secrets
+backend/.env
+
+# IDE/editor folders
+.vscode/
+.idea/
+
+# OS files
+Thumbs.db
+Desktop.ini
