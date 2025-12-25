@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>File Upload App</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(to right, #6a11cb, #2575fc);
+      color: #fff;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+
+    h2 {
+      margin-top: 30px;
+      font-size: 36px;
+      text-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+    }
+
+    .upload-container {
+      background-color: rgba(255,255,255,0.1);
+      padding: 20px;
+      border-radius: 15px;
+      display: inline-block;
+      margin-top: 20px;
+    }
+
+    input[type="file"], input[type="text"] {
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: none;
+      width: 250px;
+    }
+
+    button {
+      padding: 10px 20px;
+      background-color: #ff6f61;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: all 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #ff3b2f;
+      transform: scale(1.05);
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin-top: 20px;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    li {
+      background-color: rgba(255,255,255,0.2);
+      margin: 10px 0;
+      padding: 15px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.3s ease;
+    }
+
+    li:hover {
+      background-color: rgba(255,255,255,0.3);
+      transform: scale(1.02);
+    }
+
+    li img {
+      height: 40px;
+      width: 40px;
+      object-fit: cover;
+      border-radius: 5px;
+      margin-right: 15px;
+    }
+
+    .file-item {
+      display: flex;
+      align-items: center;
+    }
+
+    .desc-text {
+      flex: 1;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+  <h2>Cloud File Upload App</h2>
+
+  <div class="upload-container">
+    <input type="file" id="file">
+    <input type="text" id="desc" placeholder="Enter description">
+    <br>
+    <button onclick="upload()">Upload</button>
+  </div>
+
+  <ul id="list"></ul>
+
+  <script>
+    async function upload() {
+      const fileInput = document.getElementById("file");
+      const descInput = document.getElementById("desc");
+
+      if (!fileInput.files[0]) {
+        alert("Please select a file!");
+        return;
+      }
+
+      const form = new FormData();
+      form.append("file", fileInput.files[0]);
+      form.append("description", descInput.value);
+
+      try {
+        await fetch("/api/upload", { method: "POST", body: form });
+        fileInput.value = '';
+        descInput.value = '';
+        loadFiles();
+      } catch (err) {
+        alert("Upload failed: " + err.message);
+      }
+    }
+
+    async function loadFiles() {
+      const res = await fetch("/api/files");
+      const data = await res.json();
+
+      const listEl = document.getElementById("list");
+      listEl.innerHTML = '';
+
+      data.forEach(f => {
+        const li = document.createElement("li");
+
+        // Determine image type icon
+        let imgSrc = "";
+        if (f.contentType.startsWith("image/")) {
+          imgSrc = f.blobUrl; // Show uploaded image thumbnail
+        } else if (f.contentType === "application/pdf") {
+          imgSrc = "https://img.icons8.com/color/48/000000/pdf.png";
+        } else {
+          imgSrc = "https://img.icons8.com/color/48/000000/file.png";
+        }
+
+        li.innerHTML = `
+          <div class="file-item">
+            <img src="${imgSrc}" alt="File Icon">
+            <div class="desc-text">${f.fileName} - ${f.description}</div>
+            <a href="${f.blobUrl}" target="_blank" style="color:#fff;text-decoration:none;">Download</a>
+          </div>
+        `;
+        listEl.appendChild(li);
+      });
+    }
+
+    loadFiles();
+  </script>
+</body>
+</html>
+
